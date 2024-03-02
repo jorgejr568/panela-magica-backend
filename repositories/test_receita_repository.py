@@ -1,3 +1,4 @@
+import datetime
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -6,28 +7,33 @@ import orm
 import receita_repository
 
 
+mock_receita = orm.Receita(
+    id=1,
+    nome='Receita 1',
+    tipo='Tipo 1',
+    ingredientes=[
+        orm.Ingrediente(
+            id=1,
+            nome='Ingrediente 1',
+            quantidade='1 xícara'
+        )
+    ],
+    modo_de_preparo="# Modo de preparo\n\nPasso 1\nPasso 2\nPasso 3\n\n# Observações\n\nObservação "
+                    "1\nObservação 2\nObservação 3\n",
+    criador='Criador 1',
+    imagem='Imagem 1',
+    data_de_criacao=datetime.datetime.utcnow()
+)
+
+
 class TestReceitaRepositoryListarReceitas(TestCase):
     def test_listar_receitas(self):
         session = Mock()
-        receita = orm.Receita(
-            id=1,
-            nome='Receita 1',
-            tipo=models.ReceitaTipo.PUDIM,
-            ingredientes=[
-                orm.Ingrediente(
-                    id=1,
-                    nome='Ingrediente 1',
-                    quantidade='1 xícara'
-                )
-            ],
-            modo_de_preparo=['Passo 1', 'Passo 2']
-        )
-
-        session.execute.return_value.scalars.return_value.all.return_value = [receita]
+        session.execute.return_value.scalars.return_value.all.return_value = [mock_receita]
 
         receitas = receita_repository.listar_receitas(session)
 
-        self.assertEqual(receitas, [receita.to_dto()])
+        self.assertEqual(receitas, [mock_receita.to_dto()])
         session.execute.assert_called_once()
 
     def test_listar_receitas_vazia(self):
@@ -51,20 +57,6 @@ class TestReceitaRepositoryListarReceitas(TestCase):
 class TestReceitaRepositoryBuscarReceitaPorId(TestCase):
     def test_buscar_receita_por_id(self):
         session = Mock()
-        mock_receita = orm.Receita(
-            id=1,
-            nome='Receita 1',
-            tipo=models.ReceitaTipo.PUDIM,
-            ingredientes=[
-                orm.Ingrediente(
-                    id=1,
-                    nome='Ingrediente 1',
-                    quantidade='1 xícara'
-                )
-            ],
-            modo_de_preparo=['Passo 1', 'Passo 2']
-        )
-
         session.execute.return_value.scalar.return_value = mock_receita
 
         receita = receita_repository.buscar_receita_por_id(session, 1)
