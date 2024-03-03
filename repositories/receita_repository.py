@@ -30,7 +30,8 @@ def criar_receita(session: Session, receita: CriarReceita) -> Receita:
             criador=receita.criador,
             imagem=receita.imagem,
             modo_de_preparo=receita.modo_de_preparo,
-            ingredientes=[Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in receita.ingredientes]
+            ingredientes=[Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in
+                          receita.ingredientes]
         )
 
         session.add(nova_receita)
@@ -54,7 +55,8 @@ def atualizar_receita(session: Session, id_receita: int, receita: CriarReceita) 
         receita_banco.criador = receita.criador
         receita_banco.imagem = receita.imagem
         receita_banco.modo_de_preparo = receita.modo_de_preparo
-        receita_banco.ingredientes = [Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in receita.ingredientes]
+        receita_banco.ingredientes = [Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for
+                                      ingrediente in receita.ingredientes]
         session.commit()
         return receita_banco.to_dto()
     except IntegrityError as e:

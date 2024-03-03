@@ -2,6 +2,7 @@ import datetime
 import os
 from unittest import TestCase
 from unittest.mock import Mock, patch
+
 import models
 import orm
 import receita_repository
@@ -182,6 +183,7 @@ class TestReceitaRepositoryBuscarImagemReceita(TestCase):
         class MockSettings:
             def __init__(self, storage_path):
                 self.storage_path = storage_path
+
         mock_settings.return_value = MockSettings('/mock-settings')
         mock_os_path.exists.return_value = True
         mock_os_path.isfile.return_value = True
@@ -203,6 +205,7 @@ class TestReceitaRepositoryBuscarImagemReceita(TestCase):
         class MockSettings:
             def __init__(self, storage_path):
                 self.storage_path = storage_path
+
         mock_settings.return_value = MockSettings('/mock-settings')
         mock_exists.return_value = False
 
@@ -222,10 +225,10 @@ class TestReceitaRepositoryBuscarImagemReceita(TestCase):
         class MockSettings:
             def __init__(self, storage_path):
                 self.storage_path = storage_path
+
         mock_settings.return_value = MockSettings('/mock-settings')
         mock_exists.return_value = True
         mock_isfile.return_value = False
-
 
         absolute_path = receita_repository.buscar_imagem_receita('1234.jpg')
 
@@ -243,6 +246,7 @@ class TestReceitaRepositoryBuscarImagemReceita(TestCase):
         class MockSettings:
             def __init__(self, storage_path):
                 self.storage_path = storage_path
+
         mock_settings.return_value = MockSettings('/mock-settings')
         mock_exists.return_value = True
         mock_isfile.return_value = True
