@@ -3,6 +3,7 @@ from typing import Optional
 from uuid import uuid4
 
 from fastapi import UploadFile
+from sqlalchemy.exc import IntegrityError
 
 from clients import s3_client
 from models import CriarReceita
@@ -31,10 +32,11 @@ def criar_receita(session: Session, receita: CriarReceita) -> Receita:
             modo_de_preparo=receita.modo_de_preparo,
             ingredientes=[Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in receita.ingredientes]
         )
+
         session.add(nova_receita)
         session.commit()
         return nova_receita.to_dto()
-    except Exception as e:
+    except IntegrityError as e:
         session.rollback()
         raise e
 
@@ -55,7 +57,7 @@ def atualizar_receita(session: Session, id_receita: int, receita: CriarReceita) 
         receita_banco.ingredientes = [Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in receita.ingredientes]
         session.commit()
         return receita_banco.to_dto()
-    except Exception as e:
+    except IntegrityError as e:
         session.rollback()
         raise e
 
