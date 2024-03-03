@@ -34,4 +34,4 @@ class S3Client:
 def upload_file(file: BinaryIO, key: str) -> str:
     s3 = S3Client.get_instance()
     s3.upload_fileobj(file, settings().s3_bucket, key)
-    return settings().s3_cdn_url + key
+    return "{}/{}".format(settings().s3_cdn_url, key)
