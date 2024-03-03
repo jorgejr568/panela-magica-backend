@@ -12,7 +12,7 @@ class Receita(BaseOrm):
     __tablename__ = 'receitas'
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(String(50))
-    tipo: Mapped[str] = mapped_column(String(20))
+    tipo: Mapped[str] = mapped_column(String(30))
     ingredientes: Mapped[List['Ingrediente']] = relationship(cascade='all, delete-orphan')
     criador: Mapped[str] = mapped_column(String(50))
     imagem: Mapped[str] = mapped_column(Text)
@@ -39,8 +39,8 @@ class Receita(BaseOrm):
 class Ingrediente(BaseOrm):
     __tablename__ = 'ingredientes'
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    nome: Mapped[str] = mapped_column(String(50))
-    quantidade: Mapped[str] = mapped_column(String(20))
+    nome: Mapped[str] = mapped_column(String(100))
+    quantidade: Mapped[str] = mapped_column(String(50))
     receita_id: Mapped[int] = mapped_column(Integer, ForeignKey('receitas.id'))
 
 
