@@ -1,8 +1,6 @@
-from enum import Enum
-
-from pydantic import BaseModel
-from typing import List
-
+from pydantic import BaseModel, field_validator
+from typing import List, Optional
+from urllib.parse import urlparse
 
 
 class Ingrediente(BaseModel):
@@ -19,3 +17,20 @@ class Receita(BaseModel):
     data_de_criacao: int
     criador: str
     imagem: str
+
+
+class CriarReceita(BaseModel):
+    nome: str
+    tipo: str
+    ingredientes: List[Ingrediente]
+    modo_de_preparo: str
+    criador: str
+    imagem: str
+
+    @field_validator('imagem')
+    @classmethod
+    def imagem_deve_ser_valida(cls, v):
+        if urlparse(v).scheme not in ('http', 'https'):
+            raise ValueError('Imagem deve ser uma URL válida')
+
+        return v
