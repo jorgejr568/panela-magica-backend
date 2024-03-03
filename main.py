@@ -36,8 +36,12 @@ async def get_receitas(session: SessionDep) -> List[models.Receita]:
 
 
 @app.get('/receitas/{id_receita}')
-async def get_receita(session: SessionDep, id_receita: int) -> models.Receita:
-    return repositories.receita_repository.buscar_receita_por_id(session, id_receita)
+async def get_receita(session: SessionDep, id_receita: int) -> models.Receita or Response:
+    receita = repositories.receita_repository.buscar_receita_por_id(session, id_receita)
+    if not receita:
+        return Response(status_code=404)
+
+    return receita
 
 
 @app.post('/receitas')
