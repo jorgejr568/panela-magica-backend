@@ -3,9 +3,8 @@ from typing import Optional
 from uuid import uuid4
 
 from fastapi import UploadFile
-from starlette.responses import FileResponse
 
-from clients import s3_client
+from clients.s3_client import S3Client
 from models import CriarReceita
 from orm import Receita, Ingrediente, Session, select, delete
 from settings import settings
@@ -42,7 +41,7 @@ def criar_receita(session: Session, receita: CriarReceita) -> Receita:
 
 def salvar_imagem_receita(imagem: UploadFile) -> str:
     name = "{}.{}".format(uuid4(), imagem.filename.split('.')[-1])
-    return s3_client.upload_file(imagem.file, 'imagens-receitas/' + name)
+    return S3Client.upload_file(imagem.file, 'imagens-receitas/' + name)
 
 
 def atualizar_receita(session: Session, id_receita: int, receita: CriarReceita) -> Receita:

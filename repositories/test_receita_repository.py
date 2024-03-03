@@ -143,56 +143,35 @@ class TestReceitaRepositoryCriarReceita(TestCase):
 
 class TestReceitaRepositorySalvarImagemReceita(TestCase):
     @patch('receita_repository.uuid4')
-    @patch('receita_repository.settings')
-    @patch('builtins.open')
-    def test_salvar_imagem_receita(self, mock_open, mock_settings, mock_uuid4):
-        class MockSettings:
-            def __init__(self, api_url, storage_path):
-                self.api_url = api_url
-                self.storage_path = storage_path
+    @patch('clients.s3_client.S3Client.upload_file')
+    def test_salvar_imagem_receita(self, mock_s3_client, mock_uuid4):
         mock_uuid4.return_value = '1234'
-        mock_settings.return_value = MockSettings('http://localhost:8002', '/mock-settings')
-        mock_open.return_value.__enter__.return_value = Mock()
+        mock_s3_client.return_value = 'http://localhost:8002/imagens-receitas/1234.jpg'
 
         imagem = Mock()
         imagem.filename = 'imagem.jpg'
-        imagem.file.read.return_value = b'conteudo'
+        imagem.file = b'conteudo'
 
         url = receita_repository.salvar_imagem_receita(imagem)
 
         self.assertEqual(url, 'http://localhost:8002/imagens-receitas/1234.jpg')
-        mock_open.assert_called_once()
-        imagem.file.read.assert_called_once()
-        assert len(mock_settings.mock_calls) == 2
         mock_uuid4.assert_called_once()
-
-        mock_open.assert_called_once_with('/mock-settings/imagens-receitas/1234.jpg', 'wb')
-        mock_open.return_value.__enter__.return_value.write.assert_called_once_with(b'conteudo')
+        mock_s3_client.assert_called_once_with(imagem.file, 'imagens-receitas/1234.jpg')
 
     @patch('receita_repository.uuid4')
-    @patch('receita_repository.settings')
-    @patch('builtins.open')
-    def test_salvar_imagem_receita_com_erro(self, mock_open, mock_settings, mock_uuid4):
-        class MockSettings:
-            def __init__(self, api_url, storage_path):
-                self.api_url = api_url
-                self.storage_path = storage_path
+    @patch('clients.s3_client.S3Client.upload_file')
+    def test_salvar_imagem_receita_com_erro(self, mock_s3_client, mock_uuid4):
         mock_uuid4.return_value = '1234'
-        mock_settings.return_value = MockSettings('http://localhost:8002', '/mock-settings')
-        mock_open.side_effect = Exception('Erro')
+        mock_s3_client.side_effect = Exception('Erro')
 
         imagem = Mock()
         imagem.filename = 'imagem.jpg'
-        imagem.file.read.return_value = b'conteudo'
+        imagem.file = b'conteudo'
 
         with self.assertRaises(Exception):
             receita_repository.salvar_imagem_receita(imagem)
-        mock_open.assert_called_once()
-        imagem.file.read.assert_not_called()
-        mock_settings.assert_called_once()
         mock_uuid4.assert_called_once()
-        mock_open.assert_called_once_with('/mock-settings/imagens-receitas/1234.jpg', 'wb')
-        mock_open.return_value.__enter__.return_value.write.assert_not_called()
+        mock_s3_client.assert_called_once_with(imagem.file, 'imagens-receitas/1234.jpg')
 
 
 class TestReceitaRepositoryBuscarImagemReceita(TestCase):
