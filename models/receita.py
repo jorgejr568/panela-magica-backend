@@ -1,7 +1,6 @@
-from typing import List
-from urllib.parse import urlparse
-
 from pydantic import BaseModel, field_validator
+from typing import List, Optional
+from urllib.parse import urlparse
 
 
 class Ingrediente(BaseModel):

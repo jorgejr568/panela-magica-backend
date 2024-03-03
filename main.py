@@ -1,11 +1,18 @@
-from typing import List
+import os
+from typing import List, Annotated
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, Response, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from starlette.responses import FileResponse
 
 import models
 import repositories.receita_repository
-from orm import SessionDep
+from orm import Session, SessionDep
+
+from settings import settings
+
 
 app = FastAPI()
 

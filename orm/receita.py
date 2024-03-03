@@ -1,11 +1,11 @@
-from datetime import datetime, timezone
+from sqlalchemy import ForeignKey, String, Integer, JSON, Text, DateTime
+
+from sqlalchemy.orm import relationship, mapped_column, Mapped, DeclarativeBase
 from typing import List
+from datetime import datetime, timezone
 
-from sqlalchemy import ForeignKey, String, Integer, Text, DateTime
-from sqlalchemy.orm import relationship, mapped_column, Mapped
-
-import models
 from orm.base import BaseOrm
+import models
 
 
 class Receita(BaseOrm):
@@ -43,6 +43,8 @@ class Ingrediente(BaseOrm):
     quantidade: Mapped[str] = mapped_column(String(20))
     receita_id: Mapped[int] = mapped_column(Integer, ForeignKey('receitas.id'))
 
+
+
     def __repr__(self):
         return f'<Ingrediente {self.nome} - {self.id}>'
 
@@ -52,3 +54,5 @@ class Ingrediente(BaseOrm):
             nome=self.nome,
             quantidade=self.quantidade
         )
+
+

@@ -1,7 +1,6 @@
 from typing import BinaryIO
 
 import boto3
-
 from settings import settings
 
 
@@ -23,10 +22,10 @@ class S3Client:
             S3Client.__instance = self
             self.__session = boto3.session.Session()
             self.__client = self.__session.client('s3',
-                                                  region_name=settings().s3_region,
-                                                  endpoint_url=settings().s3_endpoint,
-                                                  aws_access_key_id=settings().s3_access_key,
-                                                  aws_secret_access_key=settings().s3_secret_key)
+                        region_name=settings().s3_region,
+                        endpoint_url=settings().s3_endpoint,
+                        aws_access_key_id=settings().s3_access_key,
+                        aws_secret_access_key=settings().s3_secret_key)
 
     def upload_fileobj(self, body: BinaryIO, bucket: str, key: str, **kwargs):
         self.__client.upload_fileobj(body, bucket, key, **kwargs)

@@ -1,10 +1,12 @@
 from typing import Generator, Annotated
 
 from fastapi import Depends
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 
 from orm.db import engine
+from settings import settings
 
 BaseOrm = declarative_base()
 
