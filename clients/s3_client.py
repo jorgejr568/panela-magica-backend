@@ -27,10 +27,11 @@ class S3Client:
                         aws_access_key_id=settings().s3_access_key,
                         aws_secret_access_key=settings().s3_secret_key)
 
-    def upload_file(self, data: BinaryIO, path: str) -> str:
-        metadata = {
-            'ContentType': 'image/jpeg',
-            'ACL': 'public-read',
-        }
-        self.__client.upload_fileobj(data, settings().s3_bucket, path, ExtraArgs=metadata)
-        return "{}/{}".format(settings().s3_cdn_url, path)
+    def upload_fileobj(self, body: BinaryIO, bucket: str, key: str):
+        self.__client.upload_fileobj(body, bucket, key)
+
+
+def upload_file(file: BinaryIO, key: str) -> str:
+    s3 = S3Client.get_instance()
+    s3.upload_fileobj(file, settings().s3_bucket, key)
+    return settings().s3_cdn_url + key

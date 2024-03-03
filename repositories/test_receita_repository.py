@@ -143,7 +143,7 @@ class TestReceitaRepositoryCriarReceita(TestCase):
 
 class TestReceitaRepositorySalvarImagemReceita(TestCase):
     @patch('receita_repository.uuid4')
-    @patch('clients.s3_client.S3Client.upload_file')
+    @patch('clients.s3_client.upload_file')
     def test_salvar_imagem_receita(self, mock_s3_client, mock_uuid4):
         mock_uuid4.return_value = '1234'
         mock_s3_client.return_value = 'http://localhost:8002/imagens-receitas/1234.jpg'
@@ -159,7 +159,7 @@ class TestReceitaRepositorySalvarImagemReceita(TestCase):
         mock_s3_client.assert_called_once_with(imagem.file, 'imagens-receitas/1234.jpg')
 
     @patch('receita_repository.uuid4')
-    @patch('clients.s3_client.S3Client.upload_file')
+    @patch('clients.s3_client.upload_file')
     def test_salvar_imagem_receita_com_erro(self, mock_s3_client, mock_uuid4):
         mock_uuid4.return_value = '1234'
         mock_s3_client.side_effect = Exception('Erro')
