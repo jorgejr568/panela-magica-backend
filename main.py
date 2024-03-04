@@ -1,3 +1,4 @@
+import json
 import os
 from typing import List, Annotated
 
@@ -5,7 +6,7 @@ from fastapi import FastAPI, Response, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, Response
 
 import models
 import repositories.receita_repository
@@ -54,9 +55,11 @@ async def post_receita(
 
 @app.post('/receitas/imagem')
 async def post_imagem_receita(
-        imagem: UploadFile = File(...),
-) -> str:
-    return repositories.receita_repository.salvar_imagem_receita(imagem)
+        imagem: UploadFile = File(description="Imagem da receita (png, jpg, jpeg e até 2MB)"),
+) -> Response:
+    if not repositories.receita_repository.imagem_receita_e_valida(imagem.file):
+        return Response(status_code=400, content="Imagem inválida")
+    return Response(content=json.dumps(repositories.receita_repository.salvar_imagem_receita(imagem)), media_type="application/json")
 
 
 @app.put('/receitas/{id_receita}')

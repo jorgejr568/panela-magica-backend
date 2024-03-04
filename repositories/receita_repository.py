@@ -1,7 +1,8 @@
 import os
-from typing import Optional
+from typing import Optional, BinaryIO, IO
 from uuid import uuid4
 
+import filetype
 from fastapi import UploadFile
 from sqlalchemy import select, delete
 
@@ -44,6 +45,28 @@ def criar_receita(session: Session, receita: CriarReceita) -> Receita:
 def salvar_imagem_receita(imagem: UploadFile) -> str:
     name = "{}.{}".format(uuid4(), imagem.filename.split('.')[-1])
     return s3_client.upload_file(imagem.file, 'imagens-receitas/' + name)
+
+
+def imagem_receita_e_valida(imagem: IO) -> bool:
+    max_size = 2 * 1024 * 1024
+    allowed_formats = ['image/png', 'image/jpeg', 'image/jpg']
+
+    file_info = filetype.guess(imagem.read(261))
+    imagem.seek(0)
+
+    if file_info is None:
+        return False
+
+    if file_info.mime not in allowed_formats:
+        return False
+
+    real_size = 0
+    for chunk in iter(lambda: imagem.read(4096), b''):
+        real_size += len(chunk)
+        if real_size > max_size:
+            return False
+
+    return True
 
 
 def atualizar_receita(session: Session, id_receita: int, receita: CriarReceita) -> Receita:

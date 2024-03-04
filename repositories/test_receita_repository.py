@@ -1,5 +1,6 @@
 import datetime
 import os
+import random
 from unittest import TestCase
 from unittest.mock import Mock, patch
 import models
@@ -333,3 +334,67 @@ class TestReceitaRepositoryAtualizarReceita(TestCase):
         session.execute.assert_called_once()
         session.commit.assert_not_called()
         session.rollback.assert_called_once()
+
+
+class TestReceitaRepositoryImagemReceitaEValida(TestCase):
+    @patch('receita_repository.filetype')
+    def test_imagem_receita_e_valida(self, mock_filetype):
+        imagem = Mock()
+        imagem.seek = Mock()
+        imagem.read.side_effect = [b'conteudo', b'']
+        mock_filetype.guess.return_value.mime = 'image/jpeg'
+
+        valido = receita_repository.imagem_receita_e_valida(imagem)
+
+        self.assertTrue(valido)
+
+        imagem.seek.assert_called_once_with(0)
+        self.assertEqual(imagem.read.call_count, 2)
+        self.assertEqual(imagem.read.call_args_list, [((261,),), ((4096,),)])
+        mock_filetype.guess.assert_called_once_with(b'conteudo')
+
+    @patch('receita_repository.filetype')
+    def test_imagem_receita_e_valida_sem_mime(self, mock_filetype):
+        imagem = Mock()
+        imagem.seek = Mock()
+        imagem.read.side_effect = [b'conteudo', b'']
+        mock_filetype.guess.return_value = None
+
+        valido = receita_repository.imagem_receita_e_valida(imagem)
+
+        self.assertFalse(valido)
+
+        imagem.seek.assert_called_once_with(0)
+        imagem.read.assert_called_once_with(261)
+        mock_filetype.guess.assert_called_once_with(b'conteudo')
+
+    @patch('receita_repository.filetype')
+    def test_imagem_receita_e_valida_mime_invalido(self, mock_filetype):
+        imagem = Mock()
+        imagem.seek = Mock()
+        imagem.read.side_effect = [b'conteudo', b'']
+        mock_filetype.guess.return_value.mime = 'image/gif'
+
+        valido = receita_repository.imagem_receita_e_valida(imagem)
+
+        self.assertFalse(valido)
+
+        imagem.seek.assert_called_once_with(0)
+        imagem.read.assert_called_once_with(261)
+        mock_filetype.guess.assert_called_once_with(b'conteudo')
+
+    @patch('receita_repository.filetype')
+    def test_imagem_receita_e_valida_tamanho_invalido(self, mock_filetype):
+        imagem = Mock()
+        imagem.seek = Mock()
+        big_file = ''.join([random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(2 * 1024 * 1024 + 1)])
+        chunks = [big_file[i:i + 4096] for i in range(0, len(big_file), 4096)]
+        imagem.read.side_effect = [b'conteudo', *chunks]
+        mock_filetype.guess.return_value.mime = 'image/jpeg'
+
+        valido = receita_repository.imagem_receita_e_valida(imagem)
+
+        self.assertFalse(valido)
+
+        imagem.seek.assert_called_once_with(0)
+        self.assertEqual(imagem.read.call_count, 1 + (2 * 1024 * 1024) // 4096 + 1)
