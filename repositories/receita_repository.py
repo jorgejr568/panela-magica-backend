@@ -93,10 +93,3 @@ def deletar_receita(session: Session, id_receita: int):
     except Exception as e:
         session.rollback()
         raise e
-
-
-def buscar_imagem_receita(imagem: str) -> Optional[str]:
-    filename = settings().storage_path + '/imagens-receitas/' + imagem
-    if not os.path.exists(filename) or not os.path.isfile(filename) or not os.access(filename, os.R_OK):
-        return None
-    return filename
