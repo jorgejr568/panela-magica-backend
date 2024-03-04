@@ -21,3 +21,10 @@ class EngineSingleton:
             cls._engine = None
             return True
         return False
+
+    @classmethod
+    def create_all(cls):
+        cls.get_engine()
+        from orm import BaseOrm
+        BaseOrm.metadata.create_all(cls._engine)
+        return True
