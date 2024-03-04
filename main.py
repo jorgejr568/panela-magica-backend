@@ -28,7 +28,7 @@ app.add_middleware(
 
 @app.get("/health")
 async def read_root():
-    return {"status": "ok"}
+    return {"health": "ok"}
 
 
 @app.get('/receitas')
