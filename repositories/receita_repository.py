@@ -4,7 +4,6 @@ from uuid import uuid4
 
 from fastapi import UploadFile
 from sqlalchemy import select, delete
-from sqlalchemy.exc import IntegrityError
 
 from clients import s3_client
 from models import CriarReceita
@@ -37,7 +36,7 @@ def criar_receita(session: Session, receita: CriarReceita) -> Receita:
         session.add(nova_receita)
         session.commit()
         return nova_receita.to_dto()
-    except IntegrityError as e:
+    except Exception as e:
         session.rollback()
         raise e
 
@@ -59,7 +58,7 @@ def atualizar_receita(session: Session, id_receita: int, receita: CriarReceita) 
         session.commit()
         session.refresh(receita_banco)
         return receita_banco.to_dto()
-    except IntegrityError as e:
+    except Exception as e:
         session.rollback()
         raise e
 

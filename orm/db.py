@@ -1,5 +1,23 @@
-from sqlalchemy import create_engine
+from typing import Optional
+
+from sqlalchemy import create_engine, Engine
 
 from settings import settings
 
-engine = create_engine(settings().database_url, echo=True)
+
+class EngineSingleton:
+    _engine: Optional[Engine] = None
+
+    @classmethod
+    def get_engine(cls) -> Engine:
+        if cls._engine is None:
+            cls._engine = create_engine(settings().database_url, echo=True)
+        return cls._engine
+
+    @classmethod
+    def close_engine(cls):
+        if cls._engine is not None:
+            cls._engine.dispose()
+            cls._engine = None
+            return True
+        return False

@@ -139,6 +139,7 @@ class TestReceitaRepositoryCriarReceita(TestCase):
             receita_repository.criar_receita(session, receita)
         session.add.assert_called_once()
         session.commit.assert_not_called()
+        session.rollback.assert_called_once()
 
 
 class TestReceitaRepositorySalvarImagemReceita(TestCase):
