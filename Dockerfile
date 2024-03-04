@@ -55,4 +55,7 @@ RUN pip install -r requirements.txt
 # copy project
 COPY . .
 
+# run tests
+RUN pytest -v .
+
 CMD ["uvicorn", "main:app", "--port", "8000", "--host", "0.0.0.0"]

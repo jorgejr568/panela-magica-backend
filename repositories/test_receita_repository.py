@@ -5,7 +5,7 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 import models
 import orm
-import receita_repository
+import repositories.receita_repository as receita_repository
 
 mock_receita = orm.Receita(
     id=1,
@@ -83,7 +83,7 @@ class TestReceitaRepositoryBuscarReceitaPorId(TestCase):
 
 
 class TestReceitaRepositoryCriarReceita(TestCase):
-    @patch('receita_repository.uuid4')
+    @patch('repositories.receita_repository.uuid4')
     def test_criar_receita(self, mock_uuid4):
         def mock_add_fn(receita):
             receita.id = mock_receita.id
@@ -144,7 +144,7 @@ class TestReceitaRepositoryCriarReceita(TestCase):
 
 
 class TestReceitaRepositorySalvarImagemReceita(TestCase):
-    @patch('receita_repository.uuid4')
+    @patch('repositories.receita_repository.uuid4')
     @patch('clients.s3_client.upload_file')
     def test_salvar_imagem_receita(self, mock_s3_client, mock_uuid4):
         mock_uuid4.return_value = '1234'
@@ -160,7 +160,7 @@ class TestReceitaRepositorySalvarImagemReceita(TestCase):
         mock_uuid4.assert_called_once()
         mock_s3_client.assert_called_once_with(imagem.file, 'imagens-receitas/1234.jpg')
 
-    @patch('receita_repository.uuid4')
+    @patch('repositories.receita_repository.uuid4')
     @patch('clients.s3_client.upload_file')
     def test_salvar_imagem_receita_com_erro(self, mock_s3_client, mock_uuid4):
         mock_uuid4.return_value = '1234'
@@ -254,7 +254,7 @@ class TestReceitaRepositoryAtualizarReceita(TestCase):
 
 
 class TestReceitaRepositoryImagemReceitaEValida(TestCase):
-    @patch('receita_repository.filetype')
+    @patch('repositories.receita_repository.filetype')
     def test_imagem_receita_e_valida(self, mock_filetype):
         imagem = Mock()
         imagem.seek = Mock()
@@ -270,7 +270,7 @@ class TestReceitaRepositoryImagemReceitaEValida(TestCase):
         self.assertEqual(imagem.read.call_args_list, [((261,),), ((4096,),)])
         mock_filetype.guess.assert_called_once_with(b'conteudo')
 
-    @patch('receita_repository.filetype')
+    @patch('repositories.receita_repository.filetype')
     def test_imagem_receita_e_valida_sem_mime(self, mock_filetype):
         imagem = Mock()
         imagem.seek = Mock()
@@ -285,7 +285,7 @@ class TestReceitaRepositoryImagemReceitaEValida(TestCase):
         imagem.read.assert_called_once_with(261)
         mock_filetype.guess.assert_called_once_with(b'conteudo')
 
-    @patch('receita_repository.filetype')
+    @patch('repositories.receita_repository.filetype')
     def test_imagem_receita_e_valida_mime_invalido(self, mock_filetype):
         imagem = Mock()
         imagem.seek = Mock()
@@ -300,7 +300,7 @@ class TestReceitaRepositoryImagemReceitaEValida(TestCase):
         imagem.read.assert_called_once_with(261)
         mock_filetype.guess.assert_called_once_with(b'conteudo')
 
-    @patch('receita_repository.filetype')
+    @patch('repositories.receita_repository.filetype')
     def test_imagem_receita_e_valida_tamanho_invalido(self, mock_filetype):
         imagem = Mock()
         imagem.seek = Mock()
