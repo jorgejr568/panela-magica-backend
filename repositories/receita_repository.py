@@ -57,6 +57,7 @@ def atualizar_receita(session: Session, id_receita: int, receita: CriarReceita) 
         receita_banco.modo_de_preparo = receita.modo_de_preparo
         receita_banco.ingredientes = [Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in receita.ingredientes]
         session.commit()
+        session.refresh(receita_banco)
         return receita_banco.to_dto()
     except IntegrityError as e:
         session.rollback()

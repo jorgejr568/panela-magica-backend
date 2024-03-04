@@ -6,13 +6,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 
 from orm.db import engine
-from settings import settings
 
 BaseOrm = declarative_base()
 
 
 def get_db() -> Generator:
-    with Session(engine) as session:
+    with Session(engine, autoflush=True) as session:
         yield session
 
 
