@@ -44,7 +44,12 @@ def criar_receita(session: Session, receita: CriarReceita) -> Receita:
 
 def salvar_imagem_receita(imagem: UploadFile) -> str:
     name = "{}.{}".format(uuid4(), imagem.filename.split('.')[-1])
-    return s3_client.upload_file(imagem.file, 'imagens-receitas/' + name)
+    return s3_client.upload_file(
+        file=imagem.file, 
+        key='imagens-receitas/' + name, 
+        public=True,
+        mime_type=imagem.content_type
+    )
 
 
 def imagem_receita_e_valida(imagem: IO) -> bool:
@@ -88,6 +93,7 @@ def atualizar_receita(session: Session, id_receita: int, receita: CriarReceita) 
 
 def deletar_receita(session: Session, id_receita: int):
     try:
+        session.execute(delete(Ingrediente).filter(Ingrediente.receita_id == id_receita))
         session.execute(delete(Receita).filter(Receita.id == id_receita))
         session.commit()
     except Exception as e:
