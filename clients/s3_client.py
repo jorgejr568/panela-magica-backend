@@ -31,11 +31,12 @@ class S3Client:
         self.__client.upload_fileobj(body, bucket, key, **kwargs)
 
 
-def upload_file(file: BinaryIO, key: str) -> str:
+def upload_file(file: BinaryIO, key: str, public=True, mime_type=None) -> str:
     s3 = S3Client.get_instance()
     metadata = {
-        'ContentType': 'image/jpeg',
-        'ACL': 'public-read'
+        'ACL': 'public-read' if public else 'private',
+        'ContentType': mime_type if mime_type else 'application/octet-stream',
     }
+
     s3.upload_fileobj(file, settings().s3_bucket, key, ExtraArgs=metadata)
     return "{}/{}".format(settings().s3_cdn_url, key)
