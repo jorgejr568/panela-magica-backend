@@ -153,12 +153,18 @@ class TestReceitaRepositorySalvarImagemReceita(TestCase):
         imagem = Mock()
         imagem.filename = 'imagem.jpg'
         imagem.file = b'conteudo'
+        imagem.content_type = 'image/jpeg'
 
         url = receita_repository.salvar_imagem_receita(imagem)
 
         self.assertEqual(url, 'http://localhost:8002/imagens-receitas/1234.jpg')
         mock_uuid4.assert_called_once()
-        mock_s3_client.assert_called_once_with(imagem.file, 'imagens-receitas/1234.jpg')
+        mock_s3_client.assert_called_once_with(
+            file=imagem.file,
+            key='imagens-receitas/1234.jpg',
+            public=True,
+            mime_type='image/jpeg'
+        )
 
     @patch('repositories.receita_repository.uuid4')
     @patch('clients.s3_client.upload_file')
@@ -169,11 +175,17 @@ class TestReceitaRepositorySalvarImagemReceita(TestCase):
         imagem = Mock()
         imagem.filename = 'imagem.jpg'
         imagem.file = b'conteudo'
+        imagem.content_type = 'image/jpeg'
 
         with self.assertRaises(Exception):
             receita_repository.salvar_imagem_receita(imagem)
         mock_uuid4.assert_called_once()
-        mock_s3_client.assert_called_once_with(imagem.file, 'imagens-receitas/1234.jpg')
+        mock_s3_client.assert_called_once_with(
+            file=imagem.file,
+            key='imagens-receitas/1234.jpg',
+            public=True,
+            mime_type='image/jpeg'
+        )
 
 
 class TestReceitaRepositoryDeletarReceita(TestCase):
@@ -184,7 +196,7 @@ class TestReceitaRepositoryDeletarReceita(TestCase):
 
         receita_repository.deletar_receita(session, 1)
 
-        session.execute.assert_called_once()
+        self.assertEqual(session.execute.call_count, 2)
         session.commit.assert_called_once()
 
     def test_deletar_receita_falha(self):
