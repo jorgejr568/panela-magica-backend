@@ -69,8 +69,10 @@ def imagem_receita_e_valida(imagem: IO) -> bool:
     for chunk in iter(lambda: imagem.read(4096), b''):
         real_size += len(chunk)
         if real_size > max_size:
+            imagem.seek(0)
             return False
 
+    imagem.seek(0)
     return True
 
 

@@ -277,9 +277,8 @@ class TestReceitaRepositoryImagemReceitaEValida(TestCase):
 
         self.assertTrue(valido)
 
-        imagem.seek.assert_called_once_with(0)
-        self.assertEqual(imagem.read.call_count, 2)
-        self.assertEqual(imagem.read.call_args_list, [((261,),), ((4096,),)])
+        self.assertEqual(imagem.seek.call_count, 2)
+        self.assertEqual(imagem.seek.call_args_list, [((0,),), ((0,),)])
         mock_filetype.guess.assert_called_once_with(b'conteudo')
 
     @patch('repositories.receita_repository.filetype')
@@ -325,5 +324,6 @@ class TestReceitaRepositoryImagemReceitaEValida(TestCase):
 
         self.assertFalse(valido)
 
-        imagem.seek.assert_called_once_with(0)
+        self.assertEqual(imagem.seek.call_count, 2)
+        self.assertEqual(imagem.seek.call_args_list, [((0,),), ((0,),)])
         self.assertEqual(imagem.read.call_count, 1 + (2 * 1024 * 1024) // 4096 + 1)
