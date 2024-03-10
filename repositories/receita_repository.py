@@ -28,7 +28,7 @@ def criar_receita(session: Session, receita: CriarReceita) -> Receita:
         nova_receita = Receita(
             nome=receita.nome,
             tipo=receita.tipo,
-            criador=receita.criador,
+            criador_id=receita.get_criador_id(),
             imagem=receita.imagem,
             modo_de_preparo=receita.modo_de_preparo,
             ingredientes=[Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in receita.ingredientes]
@@ -81,7 +81,6 @@ def atualizar_receita(session: Session, id_receita: int, receita: CriarReceita) 
         receita_banco = session.execute(select(Receita).filter(Receita.id == id_receita)).scalar()
         receita_banco.nome = receita.nome
         receita_banco.tipo = receita.tipo
-        receita_banco.criador = receita.criador
         receita_banco.imagem = receita.imagem
         receita_banco.modo_de_preparo = receita.modo_de_preparo
         receita_banco.ingredientes = [Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in receita.ingredientes]

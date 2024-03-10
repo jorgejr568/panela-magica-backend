@@ -15,11 +15,11 @@ class Settings(BaseSettings):
     s3_region: str
     s3_endpoint: str
     s3_cdn_url: str
-    pdkdf2_salt: str = 'pdkdf2_salt'
+    pdkdf2_salt: str = 'aaef2d3f4d77ac66e9c5a6c3d8f921d1'
     pdkdf2_rounds: int = 50000
-    jwt_secret: str
+    jwt_secret: str = 'jwt_secret'
+    jwt_expire_seconds: int = 3600
 
-    @lru_cache
     def pdkdf2_salt_bytes(self) -> bytes:
         return binascii.unhexlify(self.pdkdf2_salt)
 

@@ -20,7 +20,14 @@ mock_receita = orm.Receita(
     ],
     modo_de_preparo="# Modo de preparo\n\nPasso 1\nPasso 2\nPasso 3\n\n# Observações\n\nObservação "
                     "1\nObservação 2\nObservação 3\n",
-    criador='Criador 1',
+    criador=orm.User(
+        id=1,
+        name='Criador 1',
+        username='criador1',
+        hashed_password='hashed_password',
+        email='test@test.com',
+        created_at=datetime.datetime.utcnow(),
+    ),
     imagem='http://localhost/imagem.jpg',
     data_de_criacao=datetime.datetime.utcnow()
 )
@@ -88,6 +95,10 @@ class TestReceitaRepositoryCriarReceita(TestCase):
         def mock_add_fn(receita):
             receita.id = mock_receita.id
             receita.data_de_criacao = mock_receita.data_de_criacao
+            receita.criador = orm.User(
+                id=1,
+                name='Criador 1',
+            )
 
         session = Mock()
         session.add = Mock()
@@ -105,9 +116,8 @@ class TestReceitaRepositoryCriarReceita(TestCase):
             ],
             modo_de_preparo="# Modo de preparo\n\nPasso 1\nPasso 2\nPasso 3\n\n# Observações\n\nObservação "
                             "1\nObservação 2\nObservação 3\n",
-            criador='Criador 1',
             imagem=mock_receita.imagem,
-        )
+        ).assign_criador_id(1)
 
         nova_receita = receita_repository.criar_receita(session, receita)
 
@@ -132,9 +142,8 @@ class TestReceitaRepositoryCriarReceita(TestCase):
             ],
             modo_de_preparo="# Modo de preparo\n\nPasso 1\nPasso 2\nPasso 3\n\n# Observações\n\nObservação "
                             "1\nObservação 2\nObservação 3\n",
-            criador='Criador 1',
             imagem='http://localhost/imagem.jpg',
-        )
+        ).assign_criador_id(1)
 
         with self.assertRaises(Exception):
             receita_repository.criar_receita(session, receita)
@@ -229,7 +238,6 @@ class TestReceitaRepositoryAtualizarReceita(TestCase):
             ],
             modo_de_preparo="# Modo de preparo\n\nPasso 1\nPasso 2\nPasso 3\n\n# Observações\n\nObservação "
                             "1\nObservação 2\nObservação 3\n",
-            criador='Criador 1',
             imagem='http://localhost/imagem.jpg',
         )
 

@@ -11,7 +11,7 @@ class User(BaseOrm):
     __tablename__ = 'users'
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(80))
-    username: Mapped[str] = mapped_column(Integer, unique=True)
+    username: Mapped[str] = mapped_column(String, unique=True)
     email: Mapped[str] = mapped_column(String, unique=True)
     hashed_password: Mapped[str] = mapped_column(String)
     is_active: Mapped[bool] = mapped_column(Boolean)

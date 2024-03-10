@@ -5,6 +5,7 @@ from typing import List
 from datetime import datetime, timezone
 
 from orm.base import BaseOrm
+from orm.user import User
 import models
 
 
@@ -14,7 +15,8 @@ class Receita(BaseOrm):
     nome: Mapped[str] = mapped_column(String(50))
     tipo: Mapped[str] = mapped_column(String(30))
     ingredientes: Mapped[List['Ingrediente']] = relationship(cascade='all, delete-orphan')
-    criador: Mapped[str] = mapped_column(String(50))
+    criador: Mapped[User] = relationship(User)
+    criador_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE', onupdate='CASCADE'))
     imagem: Mapped[str] = mapped_column(Text)
     modo_de_preparo: Mapped[str] = mapped_column(Text)
     data_de_criacao: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -29,9 +31,8 @@ class Receita(BaseOrm):
             tipo=self.tipo,
             ingredientes=[ingrediente.to_dto() for ingrediente in self.ingredientes],
             modo_de_preparo=self.modo_de_preparo,
-            # it's a datetime object, so we need to convert it to a timestamp and use the UTC timezone
             data_de_criacao=int(self.data_de_criacao.astimezone(timezone.utc).timestamp()),
-            criador=self.criador,
+            criador=models.CriadorReceita.from_orm(self.criador),
             imagem=self.imagem
         )
 
@@ -41,9 +42,7 @@ class Ingrediente(BaseOrm):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     nome: Mapped[str] = mapped_column(String(100))
     quantidade: Mapped[str] = mapped_column(String(50))
-    receita_id: Mapped[int] = mapped_column(Integer, ForeignKey('receitas.id'))
-
-
+    receita_id: Mapped[int] = mapped_column(Integer, ForeignKey('receitas.id', ondelete='CASCADE', onupdate='CASCADE'))
 
     def __repr__(self):
         return f'<Ingrediente {self.nome} - {self.id}>'

@@ -10,9 +10,8 @@ from starlette.responses import FileResponse, Response
 
 import models
 import repositories.receita_repository
-from orm import Session, SessionDep
-
-from settings import settings
+import services.user_service
+from orm import SessionDep
 
 
 app = FastAPI()
@@ -74,3 +73,15 @@ async def put_receita(
 @app.delete('/receitas/{id_receita}')
 async def delete_receita(session: SessionDep, id_receita: int):
     return repositories.receita_repository.deletar_receita(session, id_receita)
+
+
+@app.post('/users/sign-in')
+async def sign_in(
+        session: SessionDep,
+        request: services.SignInRequest,
+) -> Response or models.User:
+    try:
+        return services.user_service.sign_in(request.username, request.password, session=session)
+    except services.CredentialsNotMatchError:
+        return Response(status_code=401, content="Credentials not match")
+

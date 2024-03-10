@@ -15,7 +15,7 @@ class Receita(BaseModel):
     ingredientes: List[Ingrediente]
     modo_de_preparo: str
     data_de_criacao: int
-    criador: str
+    criador: 'CriadorReceita'
     imagem: str
 
 
@@ -24,7 +24,7 @@ class CriarReceita(BaseModel):
     tipo: str
     ingredientes: List[Ingrediente]
     modo_de_preparo: str
-    criador: str
+    _criador_id: int
     imagem: str
 
     @field_validator('imagem')
@@ -34,3 +34,22 @@ class CriarReceita(BaseModel):
             raise ValueError('Imagem deve ser uma URL válida')
 
         return v
+
+    def assign_criador_id(self, criador_id: int) -> 'CriarReceita':
+        self._criador_id = criador_id
+        return self
+
+    def get_criador_id(self) -> int:
+        return self._criador_id
+
+
+class CriadorReceita(BaseModel):
+    id: int
+    nome: str
+
+    @classmethod
+    def from_orm(cls, user):
+        return CriadorReceita(
+            id=user.id,
+            nome=user.name
+        )

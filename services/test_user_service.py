@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 from unittest import TestCase
 
@@ -66,9 +66,13 @@ class TestUserService(TestCase):
 
     @patch('jwt.encode')
     @patch('settings.settings')
-    def test_generate_token(self, mock_settings, mock_jwt_encode):
+    @patch('datetime.datetime')
+    def test_generate_token(self, mock_datetime, mock_settings, mock_jwt_encode):
         mock_settings.return_value.jwt_secret = 'mock_secret'
+        mock_settings.return_value.jwt_expire_seconds = 3600
         mock_jwt_encode.return_value = 'mock_token'
+        now = datetime(2021, 1, 1, 0, 0, 0)
+        mock_datetime.utcnow.return_value = now
         mock_user = Mock()
         mock_user.id = 1
         mock_user.name = 'test'
@@ -79,6 +83,10 @@ class TestUserService(TestCase):
             {
                 'id': 1,
                 'name': 'test',
+                'iat': now,
+                'exp': now + timedelta(seconds=3600),
+                'iss': 'panela-magica',
+                'aud': ['urn:panela-magica-api'],
             },
             'mock_secret',
             algorithm='HS256',
@@ -88,6 +96,7 @@ class TestUserService(TestCase):
     @patch('settings.settings')
     def test_generate_token_throws_error(self, mock_settings, mock_jwt_encode):
         mock_settings.return_value.jwt_secret = 'mock_secret'
+        mock_settings.return_value.jwt_expire_seconds = 3600
         mock_jwt_encode.side_effect = Exception('error')
         mock_user = Mock()
         mock_user.id = 1
@@ -100,6 +109,7 @@ class TestUserService(TestCase):
     @patch('services.user_service._generate_token')
     @patch('services.user_service._verify_password')
     def test_sign_in(self, mock_verify_password, mock_generate_token, mock_user_repository):
+        mock_session = Mock()
         mock_user = Mock()
         mock_user.id = 1
         mock_user.username = 'test'
@@ -112,14 +122,14 @@ class TestUserService(TestCase):
         mock_verify_password.return_value = True
         mock_generate_token.return_value = 'mock_token'
 
-        response = sign_in('test', 'password')
+        response = sign_in('test', 'password', session=mock_session)
         self.assertEqual(response.id, 1)
         self.assertEqual(response.token, 'mock_token')
         self.assertEqual(response.username, 'test')
         self.assertEqual(response.email, 'test@test.com')
         self.assertEqual(response.created_at, mock_user.created_at)
 
-        mock_user_repository.get_user_by_email_or_username.assert_called_once_with('test')
+        mock_user_repository.get_user_by_email_or_username.assert_called_once_with(mock_session, 'test')
         mock_verify_password.assert_called_once_with('password', 'hashed_password')
         mock_generate_token.assert_called_once_with(mock_user)
 
@@ -133,6 +143,7 @@ class TestUserService(TestCase):
     @patch('services.user_service.user_repository')
     @patch('services.user_service._verify_password')
     def test_sign_in_password_not_match(self, mock_verify_password, mock_user_repository):
+        mock_session = Mock()
         mock_user = Mock()
         mock_user.id = 1
         mock_user.username = 'test'
@@ -144,7 +155,7 @@ class TestUserService(TestCase):
         mock_user_repository.get_user_by_email_or_username.return_value = mock_user
         mock_verify_password.return_value = False
         with self.assertRaises(CredentialsNotMatchError) as context:
-            sign_in('test', 'password')
+            sign_in('test', 'password', session=mock_session)
         self.assertTrue('Credentials not match' in str(context.exception))
-        mock_user_repository.get_user_by_email_or_username.assert_called_once_with('test')
+        mock_user_repository.get_user_by_email_or_username.assert_called_once_with(mock_session, 'test')
         mock_verify_password.assert_called_once_with('password', 'hashed_password')

@@ -1,3 +1,6 @@
+import binascii
+from datetime import datetime, timedelta
+
 from models.user import User
 from repositories import user_repository
 from pydantic import BaseModel
@@ -6,12 +9,14 @@ from pydantic import BaseModel
 def _hash_password(password: str) -> str:
     from backports.pbkdf2 import pbkdf2_hmac
     from settings import settings
-    return pbkdf2_hmac(
+    key = pbkdf2_hmac(
         "sha256",
         password.encode('utf-8'),
         settings().pdkdf2_salt_bytes(),
         settings().pdkdf2_rounds,
-    ).hex()
+    )
+
+    return binascii.hexlify(key).decode('utf-8')
 
 
 def _verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -21,18 +26,24 @@ def _verify_password(plain_password: str, hashed_password: str) -> bool:
 def _generate_token(user: User) -> str:
     import jwt
     from settings import settings
+    from datetime import datetime, timedelta
+
     return jwt.encode(
         {
             'id': user.id,
             'name': user.name,
+            'iat': datetime.utcnow(),
+            'exp': datetime.utcnow() + timedelta(seconds=settings().jwt_expire_seconds),
+            'iss': 'panela-magica',
+            'aud': ['urn:panela-magica-api'],
         },
         settings().jwt_secret,
         algorithm='HS256',
     )
 
 
-def sign_in(username: str, password: str) -> 'SignInResponse' or None:
-    user = user_repository.get_user_by_email_or_username(username)
+def sign_in(username: str, password: str, session=None) -> 'SignInResponse' or None:
+    user = user_repository.get_user_by_email_or_username(session, username)
     if not user:
         raise CredentialsNotMatchError()
 
@@ -56,6 +67,11 @@ class SignInResponse(BaseModel):
     username: str
     email: str
     created_at: int
+
+
+class SignInRequest(BaseModel):
+    username: str
+    password: str
 
 
 class CredentialsNotMatchError(Exception):

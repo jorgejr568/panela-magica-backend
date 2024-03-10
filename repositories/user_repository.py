@@ -12,11 +12,11 @@ def get_user_by_email_or_username(session: Session, email_or_username: str) -> U
             operators.eq(UserOrm.is_active, True),
             operators.or_(
                 UserOrm.email == email_or_username,
-                UserOrm.username == email_or_username),
+                UserOrm.username == email_or_username,
             ),
-        )
+        ),
+    )
 
     user = session.execute(stmp).scalar()
     return user.to_dto() if user else None
-
 
