@@ -26,6 +26,7 @@ def auth_middleware(
         authorization: str = Header(..., description="Token de autorização", alias="X-Authorization"),
 ):
     try:
+        authorization = authorization.split(' ')[1]
         return services.user_service.me(authorization, session=session)
     except services.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token inválido")

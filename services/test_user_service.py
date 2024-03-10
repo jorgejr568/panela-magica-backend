@@ -74,6 +74,10 @@ class TestUserService(TestCase):
     def test_generate_token(self, mock_datetime, mock_settings, mock_jwt_encode):
         mock_settings.return_value.jwt_secret = 'mock_secret'
         mock_settings.return_value.jwt_expire_seconds = 3600
+        mock_settings.return_value.jwt_issuer = 'panela-magica'
+        mock_settings.return_value.jwt_audience = 'urn:panela-magica-api'
+        mock_settings.return_value.jwt_algorithm = 'HS256'
+
         mock_jwt_encode.return_value = 'mock_token'
         now = datetime(2021, 1, 1, 0, 0, 0)
         mock_datetime.utcnow.return_value = now
@@ -101,6 +105,10 @@ class TestUserService(TestCase):
     def test_generate_token_throws_error(self, mock_settings, mock_jwt_encode):
         mock_settings.return_value.jwt_secret = 'mock_secret'
         mock_settings.return_value.jwt_expire_seconds = 3600
+        mock_settings.return_value.jwt_issuer = 'panela-magica'
+        mock_settings.return_value.jwt_audience = 'urn:panela-magica-api'
+        mock_settings.return_value.jwt_algorithm = 'HS256'
+
         mock_jwt_encode.side_effect = Exception('error')
         mock_user = Mock()
         mock_user.id = 1
@@ -185,11 +193,15 @@ class TestUserService(TestCase):
         mock_get_user_by_id.return_value = mock_user
         token = 'mock_token'
         mock_settings.return_value.jwt_secret = 'mock_secret'
+        mock_settings.return_value.jwt_algorithm = 'HS256'
+        mock_settings.return_value.jwt_audience = 'urn:panela-magica-api'
+        mock_settings.return_value.jwt_issuer = 'panela-magica'
+
         response = _validate_token(token, session=mock_session)
         self.assertEqual(response.id, 1)
         self.assertEqual(response.name, 'test')
         mock_get_user_by_id.assert_called_once_with(mock_session, 1)
-        mock_jwt_decode.assert_called_once_with(token, 'mock_secret', algorithms=['HS256'])
+        mock_jwt_decode.assert_called_once_with(token, 'mock_secret', algorithms=['HS256'], audience='urn:panela-magica-api', issuer='panela-magica')
 
     @patch('jwt.decode')
     @patch('settings.settings')

@@ -34,11 +34,11 @@ def _generate_token(user: User) -> str:
             'name': user.name,
             'iat': datetime.utcnow(),
             'exp': datetime.utcnow() + timedelta(seconds=settings().jwt_expire_seconds),
-            'iss': 'panela-magica',
-            'aud': ['urn:panela-magica-api'],
+            'iss': settings().jwt_issuer,
+            'aud': [settings().jwt_audience],
         },
         settings().jwt_secret,
-        algorithm='HS256',
+        algorithm=settings().jwt_algorithm,
     )
 
 
@@ -47,7 +47,13 @@ def _validate_token(token: str, session=None) -> 'User':
     from settings import settings
 
     try:
-        payload = jwt.decode(token, settings().jwt_secret, algorithms=['HS256'])
+        payload = jwt.decode(
+            token,
+            settings().jwt_secret,
+            algorithms=[settings().jwt_algorithm],
+            audience=settings().jwt_audience,
+            issuer=settings().jwt_issuer,
+        )
         user = user_repository.get_user_by_id(session, payload['id'])
         if not user:
             raise InvalidTokenError()
