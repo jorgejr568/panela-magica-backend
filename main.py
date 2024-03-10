@@ -2,7 +2,7 @@ import json
 import os
 from typing import List, Annotated
 
-from fastapi import FastAPI, Response, Form, File, UploadFile
+from fastapi import FastAPI, Request, Response, Form, File, UploadFile, Header, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -23,6 +23,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def auth_middleware(
+        session: SessionDep,
+        authorization: str = Header(..., description="Token de autorização", alias="X-Authorization"),
+):
+    try:
+        return services.user_service.me(authorization, session=session)
+    except services.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    except services.TokenExpiredError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/health")
@@ -48,13 +62,16 @@ async def get_receita(session: SessionDep, id_receita: int) -> models.Receita or
 async def post_receita(
         session: SessionDep,
         request: models.CriarReceita,
+        auth=Depends(auth_middleware)
 ) -> models.Receita:
+    request.assign_criador_id(auth.id)
     return repositories.receita_repository.criar_receita(session, request)
 
 
 @app.post('/receitas/imagem')
 async def post_imagem_receita(
         imagem: UploadFile = File(description="Imagem da receita (png, jpg, jpeg e até 2MB)"),
+        _=Depends(auth_middleware),
 ) -> Response:
     if not repositories.receita_repository.imagem_receita_e_valida(imagem.file):
         return Response(status_code=400, content="Imagem inválida")
@@ -66,13 +83,15 @@ async def put_receita(
         session: SessionDep,
         id_receita: int,
         request: models.CriarReceita,
+        _=Depends(auth_middleware),
 ) -> models.Receita:
     return repositories.receita_repository.atualizar_receita(session, id_receita, request)
 
 
 @app.delete('/receitas/{id_receita}')
-async def delete_receita(session: SessionDep, id_receita: int):
-    return repositories.receita_repository.deletar_receita(session, id_receita)
+async def delete_receita(session: SessionDep, id_receita: int, _=Depends(auth_middleware)) -> Response:
+    repositories.receita_repository.deletar_receita(session, id_receita)
+    return Response(status_code=204)
 
 
 @app.post('/users/sign-in')
