@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from sqlalchemy import Integer, String, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
-from orm import BaseOrm
 import models
+from orm import BaseOrm
 
 
 class User(BaseOrm):

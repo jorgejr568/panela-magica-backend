@@ -1,7 +1,7 @@
-from unittest.mock import Mock, patch
 from unittest import TestCase
-from clients import s3_client
+from unittest.mock import Mock, patch
 
+from clients import s3_client
 
 base_mock_settings = Mock()
 base_mock_settings.s3_region = 'us-east-1'

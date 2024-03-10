@@ -1,12 +1,12 @@
-from sqlalchemy import ForeignKey, String, Integer, JSON, Text, DateTime
-
-from sqlalchemy.orm import relationship, mapped_column, Mapped, DeclarativeBase
-from typing import List
 from datetime import datetime, timezone
+from typing import List
 
+from sqlalchemy import ForeignKey, String, Integer, Text, DateTime
+from sqlalchemy.orm import relationship, mapped_column, Mapped
+
+import models
 from orm.base import BaseOrm
 from orm.user import User
-import models
 
 
 class Receita(BaseOrm):
@@ -53,5 +53,3 @@ class Ingrediente(BaseOrm):
             nome=self.nome,
             quantidade=self.quantidade
         )
-
-

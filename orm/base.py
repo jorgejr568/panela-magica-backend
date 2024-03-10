@@ -1,7 +1,6 @@
 from typing import Generator, Annotated
 
 from fastapi import Depends
-from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base
 
 from orm.db import EngineSingleton

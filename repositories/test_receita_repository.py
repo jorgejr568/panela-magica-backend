@@ -1,8 +1,8 @@
 import datetime
-import os
 import random
 from unittest import TestCase
 from unittest.mock import Mock, patch
+
 import models
 import orm
 import repositories.receita_repository as receita_repository

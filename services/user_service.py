@@ -1,9 +1,9 @@
 import binascii
-from datetime import datetime, timedelta
+
+from pydantic import BaseModel
 
 from models.user import User
 from repositories import user_repository
-from pydantic import BaseModel
 
 
 def _hash_password(password: str) -> str:

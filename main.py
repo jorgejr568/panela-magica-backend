@@ -1,18 +1,14 @@
 import json
-import os
-from typing import List, Annotated
+from typing import List
 
-from fastapi import FastAPI, Request, Response, Form, File, UploadFile, Header, Depends, HTTPException
+from fastapi import FastAPI, File, UploadFile, Header, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from starlette.responses import FileResponse, Response
+from starlette.responses import Response
 
 import models
 import repositories.receita_repository
 import services.user_service
 from orm import SessionDep
-
 
 app = FastAPI()
 
@@ -75,7 +71,8 @@ async def post_imagem_receita(
 ) -> Response:
     if not repositories.receita_repository.imagem_receita_e_valida(imagem.file):
         return Response(status_code=400, content="Imagem inválida")
-    return Response(content=json.dumps(repositories.receita_repository.salvar_imagem_receita(imagem)), media_type="application/json")
+    return Response(content=json.dumps(repositories.receita_repository.salvar_imagem_receita(imagem)),
+                    media_type="application/json")
 
 
 @app.put('/receitas/{id_receita}')
@@ -104,3 +101,7 @@ async def sign_in(
     except services.CredentialsNotMatchError:
         return Response(status_code=401, content="Credentials not match")
 
+
+@app.get('/users/me')
+async def me(user=Depends(auth_middleware)) -> 'services.MeResponse':
+    return user

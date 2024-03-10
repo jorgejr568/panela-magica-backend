@@ -1,8 +1,7 @@
 import binascii
-from functools import lru_cache
+import os
 
 from pydantic_settings import BaseSettings
-import os
 
 
 class Settings(BaseSettings):

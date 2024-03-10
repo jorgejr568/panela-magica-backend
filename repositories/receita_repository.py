@@ -1,5 +1,4 @@
-import os
-from typing import Optional, BinaryIO, IO
+from typing import IO
 from uuid import uuid4
 
 import filetype
@@ -9,7 +8,6 @@ from sqlalchemy import select, delete
 from clients import s3_client
 from models import CriarReceita
 from orm import Receita, Ingrediente, Session
-from settings import settings
 
 
 def listar_receitas(session: Session):
@@ -31,7 +29,8 @@ def criar_receita(session: Session, receita: CriarReceita) -> Receita:
             criador_id=receita.get_criador_id(),
             imagem=receita.imagem,
             modo_de_preparo=receita.modo_de_preparo,
-            ingredientes=[Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in receita.ingredientes]
+            ingredientes=[Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in
+                          receita.ingredientes]
         )
 
         session.add(nova_receita)
@@ -45,8 +44,8 @@ def criar_receita(session: Session, receita: CriarReceita) -> Receita:
 def salvar_imagem_receita(imagem: UploadFile) -> str:
     name = "{}.{}".format(uuid4(), imagem.filename.split('.')[-1])
     return s3_client.upload_file(
-        file=imagem.file, 
-        key='imagens-receitas/' + name, 
+        file=imagem.file,
+        key='imagens-receitas/' + name,
         public=True,
         mime_type=imagem.content_type
     )
@@ -83,7 +82,8 @@ def atualizar_receita(session: Session, id_receita: int, receita: CriarReceita) 
         receita_banco.tipo = receita.tipo
         receita_banco.imagem = receita.imagem
         receita_banco.modo_de_preparo = receita.modo_de_preparo
-        receita_banco.ingredientes = [Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for ingrediente in receita.ingredientes]
+        receita_banco.ingredientes = [Ingrediente(nome=ingrediente.nome, quantidade=ingrediente.quantidade) for
+                                      ingrediente in receita.ingredientes]
         session.commit()
         session.refresh(receita_banco)
         return receita_banco.to_dto()
