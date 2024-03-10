@@ -2,7 +2,11 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 from unittest import TestCase
 
-from services.user_service import _hash_password, _verify_password, _generate_token, sign_in, CredentialsNotMatchError
+import jwt
+
+import services
+from services.user_service import _hash_password, _verify_password, _generate_token, sign_in, CredentialsNotMatchError, \
+    _validate_token
 
 
 class TestUserService(TestCase):
@@ -112,6 +116,7 @@ class TestUserService(TestCase):
         mock_session = Mock()
         mock_user = Mock()
         mock_user.id = 1
+        mock_user.name = 'test'
         mock_user.username = 'test'
         mock_user.email = 'test@test.com'
         mock_user.hashed_password = 'hashed_password'
@@ -124,6 +129,7 @@ class TestUserService(TestCase):
 
         response = sign_in('test', 'password', session=mock_session)
         self.assertEqual(response.id, 1)
+        self.assertEqual(response.name, 'test')
         self.assertEqual(response.token, 'mock_token')
         self.assertEqual(response.username, 'test')
         self.assertEqual(response.email, 'test@test.com')
@@ -159,3 +165,138 @@ class TestUserService(TestCase):
         self.assertTrue('Credentials not match' in str(context.exception))
         mock_user_repository.get_user_by_email_or_username.assert_called_once_with(mock_session, 'test')
         mock_verify_password.assert_called_once_with('password', 'hashed_password')
+
+    @patch('jwt.decode')
+    @patch('repositories.user_repository.get_user_by_id')
+    @patch('settings.settings')
+    def test_validate_token(self, mock_settings, mock_get_user_by_id, mock_jwt_decode):
+        mock_jwt_decode.return_value = {
+            'id': 1,
+            'name': 'test',
+            'iat': datetime.utcnow(),
+            'exp': datetime.utcnow() + timedelta(seconds=3600),
+            'iss': 'panela-magica',
+            'aud': ['urn:panela-magica-api'],
+        }
+        mock_session = Mock()
+        mock_user = Mock()
+        mock_user.id = 1
+        mock_user.name = 'test'
+        mock_get_user_by_id.return_value = mock_user
+        token = 'mock_token'
+        mock_settings.return_value.jwt_secret = 'mock_secret'
+        response = _validate_token(token, session=mock_session)
+        self.assertEqual(response.id, 1)
+        self.assertEqual(response.name, 'test')
+        mock_get_user_by_id.assert_called_once_with(mock_session, 1)
+        mock_jwt_decode.assert_called_once_with(token, 'mock_secret', algorithms=['HS256'])
+
+    @patch('jwt.decode')
+    @patch('settings.settings')
+    def test_validate_token_expired(self, mock_settings, mock_jwt_decode):
+        mock_settings.return_value.jwt_secret = 'mock_secret'
+        mock_jwt_decode.side_effect = jwt.ExpiredSignatureError()
+        with self.assertRaises(services.user_service.TokenExpiredError) as context:
+            _validate_token('mock_token')
+        self.assertTrue('Token expired' in str(context.exception))
+
+    @patch('jwt.decode')
+    @patch('settings.settings')
+    def test_validate_token_invalid(self, mock_settings, mock_jwt_decode):
+        mock_settings.return_value.jwt_secret = 'mock_secret'
+        mock_jwt_decode.side_effect = jwt.InvalidTokenError()
+        with self.assertRaises(services.user_service.InvalidTokenError) as context:
+            _validate_token('mock_token')
+        self.assertTrue('Invalid token' in str(context.exception))
+
+    @patch('jwt.decode')
+    @patch('settings.settings')
+    def test_validate_token_throws_error(self, mock_settings, mock_jwt_decode):
+        mock_settings.return_value.jwt_secret = 'mock_secret'
+        mock_jwt_decode.side_effect = Exception('mock_error')
+        with self.assertRaises(Exception) as context:
+            _validate_token('mock')
+        self.assertTrue('mock_error' in str(context.exception))
+
+    @patch('jwt.decode')
+    @patch('repositories.user_repository.get_user_by_id')
+    @patch('settings.settings')
+    def test_validate_token_user_not_found(self, mock_settings, mock_get_user_by_id, mock_jwt_decode):
+        mock_jwt_decode.return_value = {
+            'id': 1,
+            'name': 'test',
+            'iat': datetime.utcnow(),
+            'exp': datetime.utcnow() + timedelta(seconds=3600),
+            'iss': 'panela-magica',
+            'aud': ['urn:panela-magica-api'],
+        }
+        mock_get_user_by_id.return_value = None
+
+        with self.assertRaises(services.user_service.InvalidTokenError) as context:
+            _validate_token('mock_token')
+        self.assertTrue('Invalid token' in str(context.exception))
+
+        mock_get_user_by_id.assert_called_once()
+        mock_jwt_decode.assert_called_once()
+
+    @patch('jwt.decode')
+    @patch('repositories.user_repository.get_user_by_id')
+    @patch('settings.settings')
+    def test_validate_token_user_throws_error(self, mock_settings, mock_get_user_by_id, mock_jwt_decode):
+        mock_jwt_decode.return_value = {
+            'id': 1,
+            'name': 'test',
+            'iat': datetime.utcnow(),
+            'exp': datetime.utcnow() + timedelta(seconds=3600),
+            'iss': 'panela-magica',
+            'aud': ['urn:panela-magica-api'],
+        }
+        mock_get_user_by_id.side_effect = Exception('mock_error')
+
+        with self.assertRaises(Exception) as context:
+            _validate_token('mock_token')
+        self.assertTrue('mock_error' in str(context.exception))
+
+        mock_get_user_by_id.assert_called_once()
+        mock_jwt_decode.assert_called_once()
+
+    @patch('services.user_service._validate_token')
+    def test_me(self, mock_validate_token):
+        mock_session = Mock()
+        mock_user = Mock()
+        mock_user.id = 1
+        mock_user.name = 'test'
+        mock_user.username = 'test'
+        mock_user.email = 'test@test.com'
+        mock_user.created_at = int(datetime.utcnow().timestamp())
+
+        mock_validate_token.return_value = mock_user
+        response = services.me('mock_token', session=mock_session)
+
+        self.assertEqual(response.id, 1)
+        self.assertEqual(response.name, 'test')
+        self.assertEqual(response.username, 'test')
+        self.assertEqual(response.email, 'test@test.com')
+        self.assertEqual(response.created_at, mock_user.created_at)
+        mock_validate_token.assert_called_once_with('mock_token', mock_session)
+
+    @patch('services.user_service._validate_token')
+    def test_me_throws_invalid_token_error(self, mock_validate_token):
+        mock_validate_token.side_effect = services.user_service.InvalidTokenError()
+        with self.assertRaises(services.user_service.InvalidTokenError):
+            services.me('mock_token')
+        mock_validate_token.assert_called_once_with('mock_token', None)
+
+    @patch('services.user_service._validate_token')
+    def test_me_throws_token_expired_error(self, mock_validate_token):
+        mock_validate_token.side_effect = services.user_service.TokenExpiredError()
+        with self.assertRaises(services.user_service.TokenExpiredError):
+            services.me('mock_token')
+        mock_validate_token.assert_called_once_with('mock_token', None)
+
+    @patch('services.user_service._validate_token')
+    def test_me_throws_error(self, mock_validate_token):
+        mock_validate_token.side_effect = Exception('mock_error')
+        with self.assertRaises(Exception):
+            services.me('mock_token')
+        mock_validate_token.assert_called_once_with('mock_token', None)

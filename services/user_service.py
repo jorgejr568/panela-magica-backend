@@ -42,6 +42,22 @@ def _generate_token(user: User) -> str:
     )
 
 
+def _validate_token(token: str, session=None) -> 'User':
+    import jwt
+    from settings import settings
+
+    try:
+        payload = jwt.decode(token, settings().jwt_secret, algorithms=['HS256'])
+        user = user_repository.get_user_by_id(session, payload['id'])
+        if not user:
+            raise InvalidTokenError()
+        return user
+    except jwt.ExpiredSignatureError:
+        raise TokenExpiredError()
+    except jwt.InvalidTokenError:
+        raise InvalidTokenError()
+
+
 def sign_in(username: str, password: str, session=None) -> 'SignInResponse' or None:
     user = user_repository.get_user_by_email_or_username(session, username)
     if not user:
@@ -54,7 +70,19 @@ def sign_in(username: str, password: str, session=None) -> 'SignInResponse' or N
 
     return SignInResponse(
         id=user.id,
+        name=user.name,
         token=token,
+        username=user.username,
+        email=user.email,
+        created_at=user.created_at,
+    )
+
+
+def me(token: str, session=None) -> 'MeResponse':
+    user = _validate_token(token, session)
+    return MeResponse(
+        id=user.id,
+        name=user.name,
         username=user.username,
         email=user.email,
         created_at=user.created_at,
@@ -63,7 +91,16 @@ def sign_in(username: str, password: str, session=None) -> 'SignInResponse' or N
 
 class SignInResponse(BaseModel):
     id: int
+    name: str
     token: str
+    username: str
+    email: str
+    created_at: int
+
+
+class MeResponse(BaseModel):
+    id: int
+    name: str
     username: str
     email: str
     created_at: int
@@ -76,5 +113,17 @@ class SignInRequest(BaseModel):
 
 class CredentialsNotMatchError(Exception):
     def __init__(self, message: str = 'Credentials not match'):
+        self.message = message
+        super().__init__(self.message)
+
+
+class TokenExpiredError(Exception):
+    def __init__(self, message: str = 'Token expired'):
+        self.message = message
+        super().__init__(self.message)
+
+
+class InvalidTokenError(Exception):
+    def __init__(self, message: str = 'Invalid token'):
         self.message = message
         super().__init__(self.message)

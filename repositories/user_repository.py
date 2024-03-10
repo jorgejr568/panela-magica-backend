@@ -20,3 +20,7 @@ def get_user_by_email_or_username(session: Session, email_or_username: str) -> U
     user = session.execute(stmp).scalar()
     return user.to_dto() if user else None
 
+
+def get_user_by_id(session: Session, user_id: int) -> UserModel or None:
+    user = session.execute(select(UserOrm).filter(UserOrm.id == user_id)).scalar()
+    return user.to_dto() if user else None

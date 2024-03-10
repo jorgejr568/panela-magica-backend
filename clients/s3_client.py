@@ -1,8 +1,5 @@
 from typing import BinaryIO
 
-import boto3
-from settings import settings
-
 
 class S3Client:
     __instance = None
@@ -16,6 +13,8 @@ class S3Client:
         return S3Client.__instance
 
     def __init__(self):
+        import boto3
+        from settings import settings
         if S3Client.__instance != None:
             raise Exception("This class is a singleton!")
         else:
@@ -30,8 +29,16 @@ class S3Client:
     def upload_fileobj(self, body: BinaryIO, bucket: str, key: str, **kwargs):
         self.__client.upload_fileobj(body, bucket, key, **kwargs)
 
+    @classmethod
+    def __destroy__(cls):
+        cls.__instance = None
+        cls.__client = None
+        cls.__session = None
+
 
 def upload_file(file: BinaryIO, key: str, public=True, mime_type=None) -> str:
+    from settings import settings
+
     s3 = S3Client.get_instance()
     metadata = {
         'ACL': 'public-read' if public else 'private',
