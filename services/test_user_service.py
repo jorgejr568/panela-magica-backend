@@ -312,3 +312,74 @@ class TestUserService(TestCase):
         with self.assertRaises(Exception):
             services.me('mock_token')
         mock_validate_token.assert_called_once_with('mock_token', None)
+
+    @patch('repositories.user_repository.get_user_by_email_or_username')
+    def test_create_user_should_raise_if_user_email_already_exists(self, mock_get_user_by_email_or_username):
+        mock_get_user_by_email_or_username.return_value = Mock()
+        mock_session = Mock()
+        mock_user = Mock()
+        mock_user.email = 'test@test.com'
+        with self.assertRaises(services.user_service.UserAlreadyExistsError):
+            services.create_user(mock_user, session=mock_session)
+
+        mock_get_user_by_email_or_username.assert_called_once_with(mock_session, mock_user.email)
+
+    @patch('repositories.user_repository.get_user_by_email_or_username')
+    def test_create_user_should_raise_if_user_username_already_exists(self, mock_get_user_by_email_or_username):
+        def side_effect(session, email_or_username):
+            if email_or_username == 'test@test.com':
+                return None
+            return Mock()
+        mock_get_user_by_email_or_username.side_effect = side_effect
+        mock_session = Mock()
+        mock_user = Mock()
+        mock_user.email = 'test@test.com'
+        mock_user.username = 'test'
+        with self.assertRaises(services.user_service.UserAlreadyExistsError):
+            services.create_user(mock_user, session=mock_session)
+
+        self.assertEqual(mock_get_user_by_email_or_username.call_count, 2)
+        self.assertEqual(mock_get_user_by_email_or_username.call_args_list[0][0][1], mock_user.email)
+        self.assertEqual(mock_get_user_by_email_or_username.call_args_list[1][0][1], mock_user.username)
+
+    @patch('services.user_service._hash_password')
+    @patch('repositories.user_repository.create_user')
+    @patch('repositories.user_repository.get_user_by_email_or_username')
+    def test_create_user(self, mock_get_user_by_email_or_username, mock_create_user, mock_hash_password):
+        mock_get_user_by_email_or_username.return_value = None
+        mock_hash_password.return_value = 'hashed_password'
+
+        mock_session = Mock()
+        mock_user = Mock()
+        mock_user.email = 'test@test.com'
+        mock_user.username = 'test'
+        mock_user.password = 'password'
+        mock_user.name = 'test'
+
+        mock_created_user = Mock()
+        mock_created_user.email = mock_user.email
+        mock_created_user.username = mock_user.username
+        mock_created_user.hashed_password = 'hashed_password'
+        mock_created_user.name = mock_user.name
+        mock_created_user.id = 1
+        mock_created_user.created_at = int(datetime.utcnow().timestamp())
+        mock_created_user.is_active = True
+
+        mock_create_user.return_value = mock_created_user
+
+        response = services.create_user(mock_user, session=mock_session)
+        self.assertIsNotNone(response)
+
+    @patch('services.user_service._hash_password')
+    @patch('repositories.user_repository.create_user')
+    @patch('repositories.user_repository.get_user_by_email_or_username')
+    def test_create_user_should_raise_if_create_user_throws_error(self, mock_get_user_by_email_or_username, mock_create_user, mock_hash_password):
+        mock_get_user_by_email_or_username.return_value = None
+        mock_hash_password.return_value = 'hashed_password'
+
+        mock_session = Mock()
+        mock_user = Mock()
+
+        mock_create_user.side_effect = Exception('mock_error')
+        with self.assertRaises(Exception):
+            services.create_user(mock_user, session=mock_session)

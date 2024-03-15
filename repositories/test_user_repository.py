@@ -6,7 +6,8 @@ from unittest.mock import Mock
 from sqlalchemy.sql import operators, select
 
 import orm
-from repositories.user_repository import get_user_by_email_or_username, get_user_by_id
+from models import CreateUserRequest
+from repositories.user_repository import get_user_by_email_or_username, get_user_by_id, create_user
 
 mock_user = orm.User(
     id=1,
@@ -17,6 +18,12 @@ mock_user = orm.User(
     is_active=True,
     created_at=datetime.utcnow(),
 )
+
+
+def _create_user_mock_add(user_orm):
+    user_orm.id = mock_user.id
+    user_orm.created_at = mock_user.created_at
+    return user_orm
 
 
 class TestUserRepository(TestCase):
@@ -89,3 +96,58 @@ class TestUserRepository(TestCase):
         self.assertIsNone(user)
         mock_session.execute.assert_called_once()
         mock_session.execute.return_value.scalar.assert_called_once()
+
+    def test_create_user(self):
+        mock_session = Mock()
+        mock_session.add = Mock()
+        mock_session.commit = Mock()
+        mock_session.add.side_effect = _create_user_mock_add
+
+        user = create_user(mock_session, CreateUserRequest(
+            name=mock_user.name,
+            username=mock_user.username,
+            email=mock_user.email,
+            password=mock_user.hashed_password,
+        ))
+
+        self.assertEqual(user.id, mock_user.id)
+        self.assertEqual(user.name, mock_user.name)
+        self.assertEqual(user.username, mock_user.username)
+        self.assertEqual(user.email, mock_user.email)
+        self.assertEqual(user.hashed_password, mock_user.hashed_password)
+        self.assertEqual(user.is_active, mock_user.is_active)
+        self.assertEqual(user.created_at, int(mock_user.created_at.timestamp()))
+        mock_session.add.assert_called_once()
+        mock_session.commit.assert_called_once()
+        mock_session.commit.assert_called_once()
+
+    def test_create_user_fails(self):
+        mock_session = Mock()
+        mock_session.add = Mock()
+        mock_session.commit = Mock()
+        mock_session.add.side_effect = _create_user_mock_add
+
+        user = create_user(mock_session, CreateUserRequest(
+            name=mock_user.name,
+            username=mock_user.username,
+            email=mock_user.email,
+            password=mock_user.hashed_password,
+        ))
+
+        self.assertEqual(user.id, mock_user.id)
+        self.assertEqual(user.name, mock_user.name)
+        self.assertEqual(user.username, mock_user.username)
+        self.assertEqual(user.email, mock_user.email)
+        self.assertEqual(user.hashed_password, mock_user.hashed_password)
+        self.assertEqual(user.is_active, mock_user.is_active)
+        self.assertEqual(user.created_at, int(mock_user.created_at.timestamp()))
+        mock_session.add.assert_called_once()
+        mock_session.commit.assert_called_once()
+        mock_session.commit.assert_called_once()
+        mock_session.add.side_effect = Exception('Error')
+        self.assertRaises(Exception, create_user, mock_session, CreateUserRequest(
+            name=mock_user.name,
+            username=mock_user.username,
+            email=mock_user.email,
+            password=mock_user.hashed_password,
+        ))

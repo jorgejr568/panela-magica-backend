@@ -2,7 +2,8 @@ import binascii
 
 from pydantic import BaseModel
 
-from models.user import User
+from models import CreateUserResponse
+from models.user import User, CreateUserRequest
 from repositories import user_repository
 
 
@@ -95,6 +96,20 @@ def me(token: str, session=None) -> 'MeResponse':
     )
 
 
+def create_user(request: CreateUserRequest, session=None) -> 'CreateUserResponse':
+    user = user_repository.get_user_by_email_or_username(session, request.email)
+    if user:
+        raise UserAlreadyExistsError()
+
+    user = user_repository.get_user_by_email_or_username(session, request.username)
+    if user:
+        raise UserAlreadyExistsError()
+
+    request.password = _hash_password(request.password)
+    user = user_repository.create_user(session, request)
+    return CreateUserResponse.from_dto(user)
+
+
 class SignInResponse(BaseModel):
     id: int
     name: str
@@ -131,5 +146,11 @@ class TokenExpiredError(Exception):
 
 class InvalidTokenError(Exception):
     def __init__(self, message: str = 'Invalid token'):
+        self.message = message
+        super().__init__(self.message)
+
+
+class UserAlreadyExistsError(Exception):
+    def __init__(self, message: str = 'User already exists'):
         self.message = message
         super().__init__(self.message)

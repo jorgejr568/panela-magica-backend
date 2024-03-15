@@ -6,6 +6,8 @@ botocore==1.34.54
 certifi==2024.2.2
 click==8.1.7
 coverage==7.4.3
+dnspython==2.6.1
+email_validator==2.1.1
 exceptiongroup==1.2.0
 fastapi==0.110.0
 filetype==1.2.0
