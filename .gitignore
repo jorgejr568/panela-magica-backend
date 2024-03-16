@@ -4,3 +4,4 @@ database.sqlite
 venv/
 
 __pycache__/
+.coverage

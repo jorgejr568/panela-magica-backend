@@ -1,0 +1,3 @@
+[report]
+include=services/*,repositories/*,models/*,clients/*,orm/*
+omit=orm/base.py,orm/db.py

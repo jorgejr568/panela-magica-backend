@@ -36,6 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     gcc \
     python3-dev \
+    make \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -56,6 +57,6 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # run tests
-RUN pytest -v .
+RUN make test-coverage
 
 CMD ["uvicorn", "main:app", "--port", "8000", "--host", "0.0.0.0"]
