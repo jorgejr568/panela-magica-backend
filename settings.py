@@ -1,5 +1,4 @@
 import binascii
-import os
 
 from pydantic_settings import BaseSettings
 
@@ -7,7 +6,6 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     database_url: str
     api_url: str
-    storage_path: str = os.path.join(os.path.dirname(__file__), 'storage')
     s3_access_key: str
     s3_secret_key: str
     s3_bucket: str

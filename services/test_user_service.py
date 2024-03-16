@@ -201,7 +201,8 @@ class TestUserService(TestCase):
         self.assertEqual(response.id, 1)
         self.assertEqual(response.name, 'test')
         mock_get_user_by_id.assert_called_once_with(mock_session, 1)
-        mock_jwt_decode.assert_called_once_with(token, 'mock_secret', algorithms=['HS256'], audience='urn:panela-magica-api', issuer='panela-magica')
+        mock_jwt_decode.assert_called_once_with(token, 'mock_secret', algorithms=['HS256'],
+                                                audience='urn:panela-magica-api', issuer='panela-magica')
 
     @patch('jwt.decode')
     @patch('settings.settings')
@@ -330,6 +331,7 @@ class TestUserService(TestCase):
             if email_or_username == 'test@test.com':
                 return None
             return Mock()
+
         mock_get_user_by_email_or_username.side_effect = side_effect
         mock_session = Mock()
         mock_user = Mock()
@@ -373,7 +375,8 @@ class TestUserService(TestCase):
     @patch('services.user_service._hash_password')
     @patch('repositories.user_repository.create_user')
     @patch('repositories.user_repository.get_user_by_email_or_username')
-    def test_create_user_should_raise_if_create_user_throws_error(self, mock_get_user_by_email_or_username, mock_create_user, mock_hash_password):
+    def test_create_user_should_raise_if_create_user_throws_error(self, mock_get_user_by_email_or_username,
+                                                                  mock_create_user, mock_hash_password):
         mock_get_user_by_email_or_username.return_value = None
         mock_hash_password.return_value = 'hashed_password'
 

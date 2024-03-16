@@ -1,9 +1,11 @@
+from getpass import getpass
+
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
-from orm.base import get_db
+
 from models import CreateUserRequest, CreateUserResponse
+from orm.base import get_db
 from services import user_service, UserAlreadyExistsError
-from getpass import getpass
 
 
 def create_user(session: Session, request: CreateUserRequest) -> CreateUserResponse:
@@ -28,4 +30,3 @@ if __name__ == '__main__':
             print(error['loc'], error['msg'])
     except UserAlreadyExistsError:
         print("User already exists")
-

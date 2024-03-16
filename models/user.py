@@ -20,12 +20,14 @@ class CreateUserRequest(BaseModel):
     password: str
 
     @field_validator('name')
+    @classmethod
     def name_must_not_be_empty(cls, v):
         if not v:
             raise ValueError('name must not be empty')
         return v
 
     @field_validator('username')
+    @classmethod
     def username_must_be_lower_cased_and_have_at_least_4_characters(cls, v):
         if not v:
             raise ValueError('username must not be empty')
@@ -36,6 +38,7 @@ class CreateUserRequest(BaseModel):
         return v
 
     @field_validator('email')
+    @classmethod
     def email_must_be_a_valid_email(cls, v):
         if not v:
             raise ValueError('email must not be empty')
@@ -46,6 +49,7 @@ class CreateUserRequest(BaseModel):
         return v
 
     @field_validator('password')
+    @classmethod
     def password_must_have_at_least_8_characters(cls, v):
         if not v:
             raise ValueError('password must not be empty')
