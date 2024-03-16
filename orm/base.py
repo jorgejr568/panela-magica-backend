@@ -8,8 +8,8 @@ from orm.db import EngineSingleton
 BaseOrm = declarative_base()
 
 
-def get_db() -> Generator:
-    with Session(EngineSingleton.get_engine(), autoflush=True) as session:
+def get_db(echo=True) -> Generator:
+    with Session(EngineSingleton.get_engine(echo=echo), autoflush=True) as session:
         yield session
 
 

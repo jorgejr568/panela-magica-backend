@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from orm.base import get_db
 from models import CreateUserRequest, CreateUserResponse
 from services import user_service, UserAlreadyExistsError
+from getpass import getpass
 
 
 def create_user(session: Session, request: CreateUserRequest) -> CreateUserResponse:
@@ -10,14 +11,14 @@ def create_user(session: Session, request: CreateUserRequest) -> CreateUserRespo
 
 
 if __name__ == '__main__':
-    session = next(get_db())
+    session = next(get_db(echo=False))
 
     try:
         request = CreateUserRequest(
             name=input('Name: '),
             username=input('Username: '),
             email=input('Email: '),
-            password=input('Password: '),
+            password=getpass('Password: '),
         )
 
         response = create_user(session, request)

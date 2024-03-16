@@ -9,9 +9,9 @@ class EngineSingleton:
     _engine: Optional[Engine] = None
 
     @classmethod
-    def get_engine(cls) -> Engine:
+    def get_engine(cls, echo=True) -> Engine:
         if cls._engine is None:
-            cls._engine = create_engine(settings().database_url, echo=True)
+            cls._engine = create_engine(settings().database_url, echo=echo)
         return cls._engine
 
     @classmethod
